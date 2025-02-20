@@ -2,7 +2,13 @@ const core = require("@actions/core");
 const child_process = require("node:child_process");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
-const { homePath, sshAgentCmd, sshAddCmd, gitCmd } = require("./paths.js");
+const {
+  gitGlobalConfig,
+  homePath,
+  sshAgentCmd,
+  sshAddCmd,
+  gitCmd,
+} = require("./paths.js");
 const { keyFilePrefix } = require("./consts.js");
 const { alterGitConfigWithRetry } = require("./utils.js");
 
@@ -82,17 +88,17 @@ try {
 
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
-          `${gitCmd} config --global --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`,
+          `${gitCmd} config${gitGlobalConfig} --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`,
         );
       });
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
-          `${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`,
+          `${gitCmd} config${gitGlobalConfig} --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`,
         );
       });
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
-          `${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`,
+          `${gitCmd} config${gitGlobalConfig} --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`,
         );
       });
 
@@ -104,6 +110,10 @@ try {
         `Added deploy-key mapping: Use identity '${homeSsh}/${keyFile}' for GitHub repository ${ownerAndRepo}`,
       );
     });
+  core.info(
+    "Setting GIT_CONFIG_NOSYSTEM. This prevents the global git config from being read from the system-wide configuration file.",
+  );
+  core.exportVariable("GIT_CONFIG_NOSYSTEM", "1");
 } catch (error) {
   if (error.code === "ENOENT") {
     console.log(

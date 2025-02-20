@@ -3432,6 +3432,7 @@ const defaults =
 const sshAgentCmdInput = core.getInput("ssh-agent-cmd");
 const sshAddCmdInput = core.getInput("ssh-add-cmd");
 const gitCmdInput = core.getInput("git-cmd");
+const gitGlobalConfigInput = core.getBooleanInput("git-global-config");
 
 module.exports = {
   homePath: defaults.homePath,
@@ -3439,6 +3440,7 @@ module.exports = {
     sshAgentCmdInput !== "" ? sshAgentCmdInput : defaults.sshAgentCmdDefault,
   sshAddCmd: sshAddCmdInput !== "" ? sshAddCmdInput : defaults.sshAddCmdDefault,
   gitCmd: gitCmdInput !== "" ? gitCmdInput : defaults.gitCmdDefault,
+  gitGlobalConfig: gitGlobalConfigInput ? " --global" : "",
 };
 
 
@@ -3660,7 +3662,12 @@ module.exports = require("util");
 var __webpack_exports__ = {};
 const { execSync, execFileSync } = __nccwpck_require__(421);
 const { keyFilePrefix } = __nccwpck_require__(334);
-const { gitCmd, homePath, sshAgentCmd } = __nccwpck_require__(644);
+const {
+  gitCmd,
+  gitGlobalConfig,
+  homePath,
+  sshAgentCmd,
+} = __nccwpck_require__(644);
 const { alterGitConfigWithRetry } = __nccwpck_require__(561);
 const fs = __nccwpck_require__(24);
 const os = __nccwpck_require__(161);
@@ -3680,7 +3687,7 @@ function restoreGitConfig(maxTries = 3) {
     console.log("Restoring git config");
     const result = alterGitConfigWithRetry(() => {
       return execSync(
-        `${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`,
+        `${gitCmd} config${gitGlobalConfig} --get-regexp ".git@${keyFilePrefix}."`,
       );
     });
     const sections = result
@@ -3694,7 +3701,7 @@ function restoreGitConfig(maxTries = 3) {
         console.log(`Removing git config section ${section}`);
         alterGitConfigWithRetry(() => {
           return execSync(
-            `${gitCmd} config --global --remove-section ${section}`,
+            `${gitCmd} config${gitGlobalConfig} --remove-section ${section}`,
           );
         });
       }

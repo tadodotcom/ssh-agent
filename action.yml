@@ -19,6 +19,9 @@ inputs:
     git-cmd:
         description: 'git command'
         required: false
+    git-global-config:
+        description: 'Alter the global git configuration?'
+        default: false
 runs:
     using: 'node20'
     main: 'dist/index.js'
