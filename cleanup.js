@@ -1,4 +1,4 @@
-const { execFileSync } = require("node:child_process");
+const { execSync, execFileSync } = require("node:child_process");
 const { keyFilePrefix } = require("./consts.js");
 const { gitCmd, homePath, sshAgentCmd } = require("./paths.js");
 const { alterGitConfigWithRetry } = require("./utils.js");
