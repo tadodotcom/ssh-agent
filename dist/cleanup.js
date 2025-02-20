@@ -3658,7 +3658,7 @@ module.exports = require("util");
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-const { execFileSync } = __nccwpck_require__(421);
+const { execSync, execFileSync } = __nccwpck_require__(421);
 const { keyFilePrefix } = __nccwpck_require__(334);
 const { gitCmd, homePath, sshAgentCmd } = __nccwpck_require__(644);
 const { alterGitConfigWithRetry } = __nccwpck_require__(561);
