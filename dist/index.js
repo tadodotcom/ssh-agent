@@ -3746,7 +3746,7 @@ try {
       const ownerAndRepo = parts[1].replace(/\.git$/, "");
       const keyFile = `${keyFilePrefix}-${sha256}`;
 
-      fs.writeFileSync(`${homeSsh}/key-${sha256}`, `${key}\n`, { mode: "600" });
+      fs.writeFileSync(`${homeSsh}/${keyFile}`, `${key}\n`, { mode: "600" });
 
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
