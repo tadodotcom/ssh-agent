@@ -26,6 +26,13 @@ try {
     process.exit(1);
   }
 
+  const isGitDir = fs.existsSync(".git");
+
+  if (!isGitDir) {
+    core.info("Not running in a git directory. Running git init.");
+    child_process.execSync(`${gitCmd} init`);
+  }
+
   const homeSsh = `${homePath}/.ssh`;
   fs.mkdirSync(homeSsh, { recursive: true });
 
