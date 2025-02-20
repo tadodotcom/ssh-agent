@@ -3432,6 +3432,7 @@ const defaults =
 const sshAgentCmdInput = core.getInput("ssh-agent-cmd");
 const sshAddCmdInput = core.getInput("ssh-add-cmd");
 const gitCmdInput = core.getInput("git-cmd");
+const gitGlobalConfigInput = core.getBooleanInput("git-global-config");
 
 module.exports = {
   homePath: defaults.homePath,
@@ -3439,6 +3440,7 @@ module.exports = {
     sshAgentCmdInput !== "" ? sshAgentCmdInput : defaults.sshAgentCmdDefault,
   sshAddCmd: sshAddCmdInput !== "" ? sshAddCmdInput : defaults.sshAddCmdDefault,
   gitCmd: gitCmdInput !== "" ? gitCmdInput : defaults.gitCmdDefault,
+  gitGlobalConfig: gitGlobalConfigInput ? " --global" : "",
 };
 
 
@@ -3670,7 +3672,13 @@ const core = __nccwpck_require__(484);
 const child_process = __nccwpck_require__(421);
 const fs = __nccwpck_require__(24);
 const crypto = __nccwpck_require__(598);
-const { homePath, sshAgentCmd, sshAddCmd, gitCmd } = __nccwpck_require__(644);
+const {
+  gitGlobalConfig,
+  homePath,
+  sshAgentCmd,
+  sshAddCmd,
+  gitCmd,
+} = __nccwpck_require__(644);
 const { keyFilePrefix } = __nccwpck_require__(334);
 const { alterGitConfigWithRetry } = __nccwpck_require__(561);
 
@@ -3750,17 +3758,17 @@ try {
 
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
-          `${gitCmd} config --global --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`,
+          `${gitCmd} config${gitGlobalConfig} --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`,
         );
       });
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
-          `${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`,
+          `${gitCmd} config${gitGlobalConfig} --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`,
         );
       });
       alterGitConfigWithRetry(() => {
         return child_process.execSync(
-          `${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`,
+          `${gitCmd} config${gitGlobalConfig} --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`,
         );
       });
 
@@ -3772,6 +3780,10 @@ try {
         `Added deploy-key mapping: Use identity '${homeSsh}/${keyFile}' for GitHub repository ${ownerAndRepo}`,
       );
     });
+  core.info(
+    "Setting GIT_CONFIG_NOSYSTEM. This prevents the global git config from being read from the system-wide configuration file.",
+  );
+  core.exportVariable("GIT_CONFIG_NOSYSTEM", "1");
 } catch (error) {
   if (error.code === "ENOENT") {
     console.log(

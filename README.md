@@ -84,6 +84,11 @@ The following inputs can be used to control the action's behavior:
 * `ssh-agent-cmd`: Optional. Use this to specify a custom location for the `ssh-agent` binary.
 * `ssh-add-cmd`: Optional. Use this to specify a custom location for the `ssh-add` binary.
 * `git-cmd`: Optional. Use this to specify a custom location for the `git` binary.
+* `git-global-config`: Optional. Alter the global git config? If `false` only the git config in the current working directory will be altered. Defaults to `false`.
+  > [!IMPORTANT]
+  >
+  > Using this option also sets the `GIT_CONFIG_NOSYSTEM` environment variable.
+  > This prevents the global git config from being read from the system-wide configuration file.
 
 ## Exported variables
 

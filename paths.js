@@ -23,6 +23,7 @@ const defaults =
 const sshAgentCmdInput = core.getInput("ssh-agent-cmd");
 const sshAddCmdInput = core.getInput("ssh-add-cmd");
 const gitCmdInput = core.getInput("git-cmd");
+const gitGlobalConfigInput = core.getBooleanInput("git-global-config");
 
 module.exports = {
   homePath: defaults.homePath,
@@ -30,4 +31,5 @@ module.exports = {
     sshAgentCmdInput !== "" ? sshAgentCmdInput : defaults.sshAgentCmdDefault,
   sshAddCmd: sshAddCmdInput !== "" ? sshAddCmdInput : defaults.sshAddCmdDefault,
   gitCmd: gitCmdInput !== "" ? gitCmdInput : defaults.gitCmdDefault,
+  gitGlobalConfig: gitGlobalConfigInput ? " --global" : "",
 };
