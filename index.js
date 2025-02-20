@@ -3,6 +3,7 @@ const child_process = require('child_process');
 const fs = require('fs');
 const crypto = require('crypto');
 const { homePath, sshAgentCmd, sshAddCmd, gitCmd } = require('./paths.js');
+const { keyFilePrefix } = require('./consts.js');
 
 try {
     const privateKey = core.getInput('ssh-private-key');
@@ -57,21 +58,22 @@ try {
 
         const sha256 = crypto.createHash('sha256').update(key).digest('hex');
         const ownerAndRepo = parts[1].replace(/\.git$/, '');
+        const keyFile = `${keyFilePrefix}-${sha256}`
 
         fs.writeFileSync(`${homeSsh}/key-${sha256}`, key + "\n", { mode: '600' });
 
-        child_process.execSync(`${gitCmd} config --global --replace-all url."git@key-${sha256}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`);
-        child_process.execSync(`${gitCmd} config --global --add url."git@key-${sha256}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`);
-        child_process.execSync(`${gitCmd} config --global --add url."git@key-${sha256}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`);
+        child_process.execSync(`${gitCmd} config --global --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`);
+        child_process.execSync(`${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`);
+        child_process.execSync(`${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`);
 
-        const sshConfig = `\nHost key-${sha256}.github.com\n`
+        const sshConfig = `\nHost ${keyFile}.github.com\n`
                               + `    HostName github.com\n`
-                              + `    IdentityFile ${homeSsh}/key-${sha256}\n`
+                              + `    IdentityFile ${homeSsh}/${keyFile}\n`
                               + `    IdentitiesOnly yes\n`;
 
         fs.appendFileSync(`${homeSsh}/config`, sshConfig);
 
-        console.log(`Added deploy-key mapping: Use identity '${homeSsh}/key-${sha256}' for GitHub repository ${ownerAndRepo}`);
+        console.log(`Added deploy-key mapping: Use identity '${homeSsh}/${keyFile}' for GitHub repository ${ownerAndRepo}`);
     });
 
 } catch (error) {
