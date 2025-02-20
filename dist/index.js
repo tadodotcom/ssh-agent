@@ -3444,10 +3444,41 @@ module.exports = {
 
 /***/ }),
 
-/***/ 98:
-/***/ ((module) => {
+/***/ 561:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = eval("require")("./utils.js");
+const core = __nccwpck_require__(484);
+module.exports = {
+  alterGitConfigWithRetry,
+};
+
+const wait = (msec) =>
+  new Promise((resolve, _) => {
+    setTimeout(resolve, msec);
+  });
+
+function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
+  let tries = 0;
+  while (tries < maxTries) {
+    try {
+      return alterFunction();
+    } catch (error) {
+      if (!error.message.includes("could not lock config file")) {
+        throw error;
+      }
+      core.debug(error.message);
+      tries++;
+      if (tries === maxTries) {
+        throw error;
+      }
+      (async () => {
+        const delay = Math.floor(Math.random() * 2000);
+        core.debug(`Retrying in ${delay}ms...`);
+        await wait(delay);
+      })();
+    }
+  }
+}
 
 
 /***/ }),
@@ -3641,7 +3672,7 @@ const fs = __nccwpck_require__(24);
 const crypto = __nccwpck_require__(598);
 const { homePath, sshAgentCmd, sshAddCmd, gitCmd } = __nccwpck_require__(644);
 const { keyFilePrefix } = __nccwpck_require__(334);
-const { alterGitConfigWithRetry } = __nccwpck_require__(98);
+const { alterGitConfigWithRetry } = __nccwpck_require__(561);
 
 try {
   const privateKey = core.getInput("ssh-private-key");
