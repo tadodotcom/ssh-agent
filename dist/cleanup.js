@@ -2717,6 +2717,14 @@ module.exports = eval("require")("./consts.js");
 
 /***/ }),
 
+/***/ 98:
+/***/ ((module) => {
+
+module.exports = eval("require")("./utils.js");
+
+
+/***/ }),
+
 /***/ 613:
 /***/ ((module) => {
 
@@ -2855,6 +2863,7 @@ var __webpack_exports__ = {};
 const { execFileSync } = __nccwpck_require__(317);
 const { keyFilePrefix } = __nccwpck_require__(211);
 const { gitCmd, homePath, sshAgentCmd } = __nccwpck_require__(644);
+const { alterGitConfigWithRetry } = __nccwpck_require__(98);
 const fs = __nccwpck_require__(896);
 const os = __nccwpck_require__(857);
 
@@ -2868,10 +2877,12 @@ function killSshAgent() {
     }
 }
 
-function restoreGitConfig() {
+function restoreGitConfig(maxTries = 3) {
     try {
         console.log('Restoring git config');
-        const result = execSync(`${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`);
+         const result = alterGitConfigWithRetry( () => {
+            return execSync(`${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`);
+        });
         const sections = result.toString().split(os.EOL)
         .map( section => {
             return section.substring(0, section.indexOf('.insteadof'))
@@ -2880,7 +2891,9 @@ function restoreGitConfig() {
         .forEach(section => {
             if (section !== '') {
                 console.log(`Removing git config section ${section}`);
-                execSync(`${gitCmd} config --global --remove-section ${section}`);
+                alterGitConfigWithRetry(() => {
+                    return execSync(`${gitCmd} config --global --remove-section ${section}`)
+                });
             }
         });
     } catch (error) {

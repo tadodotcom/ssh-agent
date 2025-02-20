@@ -2717,6 +2717,14 @@ module.exports = eval("require")("./consts.js");
 
 /***/ }),
 
+/***/ 98:
+/***/ ((module) => {
+
+module.exports = eval("require")("./utils.js");
+
+
+/***/ }),
+
 /***/ 613:
 /***/ ((module) => {
 
@@ -2858,6 +2866,7 @@ const fs = __nccwpck_require__(896);
 const crypto = __nccwpck_require__(982);
 const { homePath, sshAgentCmd, sshAddCmd, gitCmd } = __nccwpck_require__(644);
 const { keyFilePrefix } = __nccwpck_require__(211);
+const { alterGitConfigWithRetry } = __nccwpck_require__(98);
 
 try {
     const privateKey = core.getInput('ssh-private-key');
@@ -2916,9 +2925,15 @@ try {
 
         fs.writeFileSync(`${homeSsh}/key-${sha256}`, key + "\n", { mode: '600' });
 
-        child_process.execSync(`${gitCmd} config --global --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`);
-        child_process.execSync(`${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`);
-        child_process.execSync(`${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`);
+        alterGitConfigWithRetry(() => {
+            return child_process.execSync(`${gitCmd} config --global --replace-all url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "https://github.com/${ownerAndRepo}"`)
+        });
+        alterGitConfigWithRetry(() => {
+            return child_process.execSync(`${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "git@github.com:${ownerAndRepo}"`)
+        });
+        alterGitConfigWithRetry(() => {
+            return child_process.execSync(`${gitCmd} config --global --add url."git@${keyFile}.github.com:${ownerAndRepo}".insteadOf "ssh://git@github.com/${ownerAndRepo}"`)
+        });
 
         const sshConfig = `\nHost ${keyFile}.github.com\n`
                               + `    HostName github.com\n`

@@ -1,6 +1,7 @@
 const { execFileSync } = require('child_process');
 const { keyFilePrefix } = require('./consts.js');
 const { gitCmd, homePath, sshAgentCmd } = require('./paths.js');
+const { alterGitConfigWithRetry } = require('./utils.js');
 const fs = require('fs');
 const os = require('os');
 
@@ -14,10 +15,12 @@ function killSshAgent() {
     }
 }
 
-function restoreGitConfig() {
+function restoreGitConfig(maxTries = 3) {
     try {
         console.log('Restoring git config');
-        const result = execSync(`${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`);
+         const result = alterGitConfigWithRetry( () => {
+            return execSync(`${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`);
+        });
         const sections = result.toString().split(os.EOL)
         .map( section => {
             return section.substring(0, section.indexOf('.insteadof'))
@@ -26,7 +29,9 @@ function restoreGitConfig() {
         .forEach(section => {
             if (section !== '') {
                 console.log(`Removing git config section ${section}`);
-                execSync(`${gitCmd} config --global --remove-section ${section}`);
+                alterGitConfigWithRetry(() => {
+                    return execSync(`${gitCmd} config --global --remove-section ${section}`)
+                });
             }
         });
     } catch (error) {
