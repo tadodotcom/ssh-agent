@@ -1,9 +1,9 @@
-const { execFileSync } = require('child_process');
+const { execFileSync } = require('node:child_process');
 const { keyFilePrefix } = require('./consts.js');
 const { gitCmd, homePath, sshAgentCmd } = require('./paths.js');
 const { alterGitConfigWithRetry } = require('./utils.js');
-const fs = require('fs');
-const os = require('os');
+const fs = require('node:fs');
+const os = require('node:os');
 
 function killSshAgent() {
     try {
@@ -41,7 +41,7 @@ function restoreGitConfig(maxTries = 3) {
 }
 
 function removeCustomSshKeys() {
-    const homeSsh = homePath + '/.ssh';
+    const homeSsh = `${homePath}/.ssh`;
     try {
         console.log('Removing custom SSH keys');
         fs.readdirSync(homeSsh)
@@ -60,14 +60,14 @@ function removeCustomSshKeys() {
 function removeHostEntries() {
     console.log("Removing custom host entries")
     try{
-        const sshConfigFile = homePath + '/.ssh/config';
+        const sshConfigFile = `${homePath}/.ssh/config`;
         const input = fs.readFileSync(sshConfigFile, 'utf8');
         const lines = input.split('\n');
         const linesToKeep = [];
         let skip = false;
 
         for (const line of lines) {
-            if (line.startsWith('Host ' + keyFilePrefix)) {
+            if (line.startsWith(`Host ${keyFilePrefix}`)) {
                 skip = true;
             } else if (line.startsWith('Host ')) {
                 skip = false;
