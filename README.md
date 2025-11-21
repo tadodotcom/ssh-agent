@@ -84,6 +84,7 @@ The following inputs can be used to control the action's behavior:
 * `ssh-agent-cmd`: Optional. Use this to specify a custom location for the `ssh-agent` binary.
 * `ssh-add-cmd`: Optional. Use this to specify a custom location for the `ssh-add` binary.
 * `git-cmd`: Optional. Use this to specify a custom location for the `git` binary.
+* `fetch-github-host-keys`: Optional. When set to `true`, the action will fetch and add GitHub's SSH host keys to the `known_hosts` file.
 
 ## Exported variables
 

@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Actionlint
-        uses: eifinger/actionlint-action@23c85443d840cd73bbecb9cddfc933cc21649a38  # v1.9.1
+        uses: eifinger/actionlint-action@213860089b7cf97d640aa67567898fabeb132746  # v1.9.3
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -25,3 +25,17 @@ jobs:
       - name: Make sure no changes from linters are detected
         run: |
           git diff --exit-code || (echo "::error::Please run 'npm run all' to fix the issues" && exit 1)
+  test:
+    strategy:
+      matrix:
+        runner: [ubuntu-slim, ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: ./
+        with:
+          ssh-private-key: ${{ secrets.CI_DEPLOY_KEY_PRIVATE_KEY }}
+          fetch-github-host-keys: ${{ matrix.runner == 'ubuntu-slim' }}
+      - run: git clone git@github.com:tadodotcom/ssh-agent.git /tmp/ssh-agent-clone

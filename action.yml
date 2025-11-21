@@ -19,6 +19,10 @@ inputs:
     git-cmd:
         description: 'git command'
         required: false
+    fetch-github-host-keys:
+        description: 'Whether to fetch and add GitHub host keys to known_hosts'
+        required: false
+        default: false
 runs:
     using: 'node20'
     main: 'dist/index.js'
