@@ -11,6 +11,9 @@ try {
   const logPublicKey = core.getBooleanInput("log-public-key", {
     default: true,
   });
+  const fetchGithubHostKeys = core.getBooleanInput("fetch-github-host-keys", {
+    default: false,
+  });
 
   if (!privateKey) {
     core.setFailed(
@@ -22,6 +25,26 @@ try {
 
   const homeSsh = `${homePath}/.ssh`;
   fs.mkdirSync(homeSsh, { recursive: true });
+
+  if (fetchGithubHostKeys) {
+    console.log("Fetching GitHub host keys");
+    try {
+      const metaJson = child_process.execSync(
+        "curl --silent https://api.github.com/meta",
+        { encoding: "utf8" },
+      );
+
+      const meta = JSON.parse(metaJson);
+      const knownHostsFile = `${homeSsh}/known_hosts`;
+      const hostKeyLines = `${meta.ssh_keys.map((key) => `github.com ${key}`).join("\n")}\n`;
+      fs.appendFileSync(knownHostsFile, hostKeyLines);
+      console.log(
+        `Added ${meta.ssh_keys.length} GitHub host key(s) to known_hosts`,
+      );
+    } catch (error) {
+      console.warn(`Failed to fetch GitHub host keys: ${error.message}`);
+    }
+  }
 
   console.log("Starting ssh-agent");
 
