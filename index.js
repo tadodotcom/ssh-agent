@@ -29,10 +29,13 @@ try {
   if (fetchGithubHostKeys) {
     console.log("Fetching GitHub host keys");
     try {
-      const metaJson = child_process.execSync(
-        "curl --silent https://api.github.com/meta",
-        { encoding: "utf8" },
-      );
+      // Use curl which is available on all GitHub Actions runners (Linux, macOS, Windows)
+      const curlCmd =
+        process.platform === "win32"
+          ? "curl.exe --silent https://api.github.com/meta"
+          : "curl --silent https://api.github.com/meta";
+
+      const metaJson = child_process.execSync(curlCmd, { encoding: "utf8" });
 
       const meta = JSON.parse(metaJson);
       const knownHostsFile = `${homeSsh}/known_hosts`;

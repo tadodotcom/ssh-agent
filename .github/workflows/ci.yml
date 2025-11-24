@@ -37,5 +37,5 @@ jobs:
       - uses: ./
         with:
           ssh-private-key: ${{ secrets.CI_DEPLOY_KEY_PRIVATE_KEY }}
-          fetch-github-host-keys: ${{ matrix.runner == 'ubuntu-slim' }}
+          fetch-github-host-keys: ${{ matrix.runner == 'ubuntu-slim' || matrix.runner == 'windows-latest' }}
       - run: git clone git@github.com:tadodotcom/ssh-agent.git ssh-agent-clone
