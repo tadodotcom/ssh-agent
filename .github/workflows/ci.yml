@@ -28,7 +28,7 @@ jobs:
   test:
     strategy:
       matrix:
-        runner: [ubuntu-slim, ubuntu-latest]
+        runner: [ubuntu-slim, ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
@@ -38,4 +38,4 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.CI_DEPLOY_KEY_PRIVATE_KEY }}
           fetch-github-host-keys: ${{ matrix.runner == 'ubuntu-slim' }}
-      - run: git clone git@github.com:tadodotcom/ssh-agent.git /tmp/ssh-agent-clone
+      - run: git clone git@github.com:tadodotcom/ssh-agent.git ssh-agent-clone
