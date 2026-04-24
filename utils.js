@@ -8,7 +8,7 @@ const wait = (msec) =>
     setTimeout(resolve, msec);
   });
 
-function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
+async function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
   let tries = 0;
   while (tries < maxTries) {
     try {
@@ -22,11 +22,9 @@ function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
       if (tries === maxTries) {
         throw error;
       }
-      (async () => {
-        const delay = Math.floor(Math.random() * 2000);
-        core.debug(`Retrying in ${delay}ms...`);
-        await wait(delay);
-      })();
+      const delay = 2000 + Math.floor(Math.random() * 2000);
+      core.debug(`Retrying in ${delay}ms...`);
+      await wait(delay);
     }
   }
 }
