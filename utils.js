@@ -3,11 +3,12 @@ module.exports = {
   alterGitConfigWithRetry,
 };
 
-function wait(msec) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, msec);
-}
+const wait = (msec) =>
+  new Promise((resolve, _) => {
+    setTimeout(resolve, msec);
+  });
 
-function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
+async function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
   let tries = 0;
   while (tries < maxTries) {
     try {
@@ -23,7 +24,7 @@ function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
       }
       const delay = 2000 + Math.floor(Math.random() * 2000);
       core.debug(`Retrying in ${delay}ms...`);
-      wait(delay);
+      await wait(delay);
     }
   }
 }

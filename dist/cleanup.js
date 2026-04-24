@@ -3452,11 +3452,12 @@ module.exports = {
   alterGitConfigWithRetry,
 };
 
-function wait(msec) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, msec);
-}
+const wait = (msec) =>
+  new Promise((resolve, _) => {
+    setTimeout(resolve, msec);
+  });
 
-function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
+async function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
   let tries = 0;
   while (tries < maxTries) {
     try {
@@ -3472,7 +3473,7 @@ function alterGitConfigWithRetry(alterFunction, maxTries = 3) {
       }
       const delay = 2000 + Math.floor(Math.random() * 2000);
       core.debug(`Retrying in ${delay}ms...`);
-      wait(delay);
+      await wait(delay);
     }
   }
 }
@@ -3672,30 +3673,30 @@ function killSshAgent() {
   }
 }
 
-function restoreGitConfig(maxTries = 3) {
+async function restoreGitConfig(maxTries = 3) {
   try {
     console.log("Restoring git config");
-    const result = alterGitConfigWithRetry(() => {
+    const result = await alterGitConfigWithRetry(() => {
       return execSync(
         `${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`,
       );
-    });
+    }, maxTries);
     const sections = result
       .toString()
       .split(os.EOL)
       .map((section) => {
         return section.substring(0, section.indexOf(".insteadof"));
       });
-    new Set(sections).forEach((section) => {
+    for (const section of new Set(sections)) {
       if (section !== "") {
         console.log(`Removing git config section ${section}`);
-        alterGitConfigWithRetry(() => {
+        await alterGitConfigWithRetry(() => {
           return execSync(
             `${gitCmd} config --global --remove-section ${section}`,
           );
-        });
+        }, maxTries);
       }
-    });
+    }
   } catch (error) {
     console.log(error.message);
     console.log("Error restoring git config, proceeding anyway");
@@ -3747,10 +3748,12 @@ function removeHostEntries() {
   }
 }
 
-killSshAgent();
-restoreGitConfig();
-removeCustomSshKeys();
-removeHostEntries();
+(async () => {
+  killSshAgent();
+  await restoreGitConfig();
+  removeCustomSshKeys();
+  removeHostEntries();
+})();
 
 module.exports = __webpack_exports__;
 /******/ })()

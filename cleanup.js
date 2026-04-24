@@ -15,30 +15,30 @@ function killSshAgent() {
   }
 }
 
-function restoreGitConfig(maxTries = 3) {
+async function restoreGitConfig(maxTries = 3) {
   try {
     console.log("Restoring git config");
-    const result = alterGitConfigWithRetry(() => {
+    const result = await alterGitConfigWithRetry(() => {
       return execSync(
         `${gitCmd} config --global --get-regexp ".git@${keyFilePrefix}."`,
       );
-    });
+    }, maxTries);
     const sections = result
       .toString()
       .split(os.EOL)
       .map((section) => {
         return section.substring(0, section.indexOf(".insteadof"));
       });
-    new Set(sections).forEach((section) => {
+    for (const section of new Set(sections)) {
       if (section !== "") {
         console.log(`Removing git config section ${section}`);
-        alterGitConfigWithRetry(() => {
+        await alterGitConfigWithRetry(() => {
           return execSync(
             `${gitCmd} config --global --remove-section ${section}`,
           );
-        });
+        }, maxTries);
       }
-    });
+    }
   } catch (error) {
     console.log(error.message);
     console.log("Error restoring git config, proceeding anyway");
@@ -90,7 +90,9 @@ function removeHostEntries() {
   }
 }
 
-killSshAgent();
-restoreGitConfig();
-removeCustomSshKeys();
-removeHostEntries();
+(async () => {
+  killSshAgent();
+  await restoreGitConfig();
+  removeCustomSshKeys();
+  removeHostEntries();
+})();
